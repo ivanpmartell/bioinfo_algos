@@ -42,17 +42,17 @@ def maxes(a, key=None):
             max_list.append(s)
     return m, max_list
 
-d = 1
-seq_a = 'GATTACA'
-seq_b = 'GCATGCU'
+d = 2
+seq_a = 'TGTTACGG'
+seq_b = 'GGTTGACTA'
 
 def main():
     """ Main program """
-    F = make_matrix()
+    F, max_cell = make_matrix()
     pretty_matrix = np.array(F)
     print(pretty_matrix)
 
-    alignments = backtrack(F)
+    alignments = backtrack(F, max_cell)
     print('Best Alignments')
     for alignment in alignments:
         print(alignment)
@@ -67,29 +67,33 @@ def make_matrix():
 
     matrix[0][0].position = (0, 0)
     for i in range(1, rows):
-        matrix[i][0](-i*d, (i, 0)).parents = [matrix[i-1][0]]
+        matrix[i][0](0, (i, 0)).parents = [matrix[0][0]]
     for j in range(1, cols):
-        matrix[0][j](-j*d, (0, j)).parents = [matrix[0][j-1]]
+        matrix[0][j](0, (0, j)).parents = [matrix[0][0]]
 
+    max_cell = matrix[0][0]
     for i in range(1, rows):
         for j in range(1, cols):
             cells = {0: matrix[i-1][j-1],
                      1: matrix[i-1][j],
-                     2: matrix[i][j-1]}
+                     2: matrix[i][j-1],
+                     3: None}
             values = [cells[0] + s(x[i],y[j]),
                       cells[1] - d,
-                      cells[2] - d]
+                      cells[2] - d,
+                      0]
             result, indices = maxes(range(len(values)), key=values.__getitem__)
             parents = itemgetter(*indices)(cells)
             if(not type(parents) == tuple):
                 parents = tuple([parents])
             matrix[i][j](result, (i, j)).parents = parents
+            if(matrix[i][j].value > max_cell.value):
+                max_cell = matrix[i][j]
     
-    return matrix
+    return matrix, max_cell
 
-def backtrack(F):
-    rows, cols = (len(F), len(F[0]))
-    cell = F[rows-1][cols-1]
+def backtrack(F, max_cell):
+    cell = max_cell
     stack = [Alignment(cell, ('', ''))]
     alignments = []
     while(stack):
@@ -118,9 +122,9 @@ def backtrack(F):
 
 def s(x_i, y_i):
     if x_i == y_i:
-        return 1
+        return 3
     else:
-        return -1
+        return -3
 
 if __name__ == "__main__":
     main()
