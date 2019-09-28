@@ -1,50 +1,10 @@
 from operator import itemgetter
 import numpy as np #ONLY FOR 2D LIST PRETTY PRINT
+from helper import maxes, backtrack, Cell
 
-class Cell:
-    def __init__(self, value):
-        self.value = value
-        self.parents = [None]
-        self.position = (-999, -999)
-    
-    def __call__(self, value, position):
-        self.value = value
-        self.position = position
-        return self
-
-    def __repr__(self):
-        return str(self.value)
-
-    def __add__(self, r):
-        return self.value + r
-    
-    def __sub__(self, r):
-        return self.value - r
-
-class Alignment:
-    def __init__(self, root, string):
-        self.root = root
-        self.score = 0
-        self.strings = string
-    
-    def __repr__(self):
-        return '-----------------\n' + self.strings[0]+ '\n' +self.strings[1] + '\nScore: ' + str(self.score)
-
-def maxes(a, key=None):
-    if key is None:
-        key = lambda x: x
-    m, max_list = key(a[0]), []
-    for s in a:
-        k = key(s)
-        if k > m:
-            m, max_list = k, [s]
-        elif k == m:
-            max_list.append(s)
-    return m, max_list
-
-d = 1
-seq_a = 'GATTACA'
-seq_b = 'GCATGCU'
+d = 2
+seq_a = 'ATCAGAGTC'
+seq_b = 'TTCAGTC'
 
 def main():
     """ Main program """
@@ -52,7 +12,7 @@ def main():
     pretty_matrix = np.array(F)
     print(pretty_matrix)
 
-    alignments = backtrack(F)
+    alignments = backtrack(F, backtrack_formulas)
     print('Best Alignments')
     for alignment in alignments:
         print(alignment)
@@ -87,38 +47,25 @@ def make_matrix():
     
     return matrix
 
-def backtrack(F):
-    rows, cols = (len(F), len(F[0]))
-    cell = F[rows-1][cols-1]
-    stack = [Alignment(cell, ('', ''))]
-    alignments = []
-    while(stack):
-        alignment = stack.pop()
-        cell = alignment.root
-        alignment.score += cell.value
-        for parent in cell.parents:
-            if parent is None:
-                alignments.append(alignment)
-                continue
-            x = alignment.strings[0]
-            y = alignment.strings[1]
-            if(parent.position[0] < cell.position[0] and parent.position[1] < cell.position[1]):
-                x = seq_a[parent.position[0]] + x
-                y = seq_b[parent.position[1]] + y
-            elif(parent.position[0] < cell.position[0]):
-                x = seq_a[parent.position[0]] + x
-                y = '-' + y
-            elif(parent.position[1] < cell.position[1]):
-                x = '-' + x
-                y = seq_b[parent.position[1]] + y
-            else:
-                raise Exception
-            stack.append(Alignment(parent, (x,y)))
-    return alignments
+def backtrack_formulas(alignment, cell, parent):
+    x = alignment.strings[0]
+    y = alignment.strings[1]
+    if(parent.position[0] < cell.position[0] and parent.position[1] < cell.position[1]):
+        x = seq_a[parent.position[0]] + x
+        y = seq_b[parent.position[1]] + y
+    elif(parent.position[0] < cell.position[0]):
+        x = seq_a[parent.position[0]] + x
+        y = '-' + y
+    elif(parent.position[1] < cell.position[1]):
+        x = '-' + x
+        y = seq_b[parent.position[1]] + y
+    else:
+        raise Exception
+    return x, y
 
 def s(x_i, y_i):
     if x_i == y_i:
-        return 1
+        return 2
     else:
         return -1
 
